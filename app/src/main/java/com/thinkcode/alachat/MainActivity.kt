@@ -1,5 +1,6 @@
 package com.thinkcode.alachat
 
+import android.content.Intent
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +14,7 @@ import android.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import com.google.firebase.auth.FirebaseAuth
 import com.thinkcode.alachat.databinding.ActivityMainBinding
 import com.thinkcode.alachat.fragments.ChatsFragment
 import com.thinkcode.alachat.fragments.SearchFragment
@@ -59,10 +61,18 @@ class MainActivity : AppCompatActivity() {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> true
-            else -> super.onOptionsItemSelected(item)
+         when (item.itemId) {
+            R.id.action_logout -> {
+
+                FirebaseAuth.getInstance().signOut()
+                val intent= Intent(this@MainActivity,WelcomeActivity::class.java)
+                startActivity(intent)
+                finish()
+                return true
+            }
+
         }
+        return false
     }
 
 
