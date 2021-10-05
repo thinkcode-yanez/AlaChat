@@ -1,12 +1,18 @@
 package com.thinkcode.alachat.adapters
 
+import android.app.AlertDialog
 import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
+import com.thinkcode.alachat.MainActivity
+import com.thinkcode.alachat.MessageChatActivity
 import com.thinkcode.alachat.R
 import com.thinkcode.alachat.databinding.UserSearchItemLayoutBinding
 import com.thinkcode.alachat.models.Users
@@ -40,6 +46,32 @@ class UserAdapter(
        // viewHolder.enlazarItem(item!!)
         viewHolder.userNameText.text= item!!.username
         Picasso.get().load(item.profile).into(viewHolder.profileImageView)
+
+        viewHolder.itemView.setOnClickListener { //Clieamos para traernos el id a quien queremos mandar un mensaje
+
+            val options = arrayOf<CharSequence>(
+                "Send Message",
+                "Visit Profile"
+            )
+            val builder:AlertDialog.Builder=AlertDialog.Builder(viewHolder.context)
+            builder.setTitle("What do you want?")
+            builder.setItems(options,DialogInterface.OnClickListener { dialogInterface, position ->
+                if(position==0){
+
+                    val intent= Intent(viewHolder.context, MessageChatActivity::class.java)
+                    intent.putExtra("visit_id",item.uid) //capturamos el id de quien clikeamos
+                    viewHolder.context.startActivity(intent)
+
+                }
+                if(position==1){
+
+
+                }
+
+            })
+            builder.show()
+
+        }
 
     }
 

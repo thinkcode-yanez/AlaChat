@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AlaChat">
         <activity
-            android:name="com.thinkcode.MessageChatActivity"
+            android:name=".MessageChatActivity"
             android:exported="true" />
         <activity
             android:name=".WelcomeActivity"
