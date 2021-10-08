@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#EDE8E3"
+    android:background="#C5BDB6"
     tools:context=".MessageChatActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -42,24 +42,27 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview_chats"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/barlayout_messageChat"
-
-        android:layout_above="@+id/relative_layout_bottom">
-
+        android:layout_above="@+id/relative_layout_bottom"
+        android:layout_below="@id/barlayout_messageChat">
 
     </androidx.recyclerview.widget.RecyclerView>
+
+
+
+
 
     <RelativeLayout
         android:id="@+id/relative_layout_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#fff"
-        android:padding="6dp"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:background="#EDE8E3"
+        android:padding="6dp">
 
         <ImageView
             android:id="@+id/btn_attach_image_file"
@@ -75,23 +78,23 @@
             android:id="@+id/text_messageChat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/btn_attach_image_file"
-            android:background="@android:color/transparent"
-            android:hint="Write message here...."
-            android:layout_toStartOf="@id/btn_send_message"
             android:layout_centerVertical="true"
             android:layout_marginLeft="6dp"
             android:layout_marginRight="6dp"
-            >
+            android:layout_toStartOf="@id/btn_send_message"
+            android:layout_toEndOf="@id/btn_attach_image_file"
+            android:background="@android:color/transparent"
+            android:hint="Write message here....">
 
         </EditText>
+
         <ImageView
             android:id="@+id/btn_send_message"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/ic_action_name"
             android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true">
+            android:layout_alignParentRight="true"
+            android:background="@drawable/ic_action_name">
 
         </ImageView>
 

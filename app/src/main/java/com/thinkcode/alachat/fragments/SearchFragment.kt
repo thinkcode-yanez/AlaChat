@@ -94,6 +94,7 @@ class SearchFragment : Fragment() {
                     }
                     userAdapter = UserAdapter(mUsers!!, false)
                     binding.rvSearhList.adapter = userAdapter
+                   // binding.rvSearhList.smoothScrollToPosition(userAdapter!!.itemCount-1)
 
 
                 }

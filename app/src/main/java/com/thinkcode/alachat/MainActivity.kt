@@ -23,6 +23,7 @@ import com.thinkcode.alachat.databinding.ActivityMainBinding
 import com.thinkcode.alachat.fragments.ChatsFragment
 import com.thinkcode.alachat.fragments.SearchFragment
 import com.thinkcode.alachat.fragments.SettingsFragment
+import com.thinkcode.alachat.models.Chat
 import com.thinkcode.alachat.models.Users
 
 class MainActivity : AppCompatActivity() {
@@ -49,14 +50,50 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar!!.title=""
 
-        val viewPagerAdapter=ViewPagerAdapter(supportFragmentManager)
+     /*   val viewPagerAdapter=ViewPagerAdapter(supportFragmentManager)
 
         viewPagerAdapter.addFragment(ChatsFragment(),"Chats")
         viewPagerAdapter.addFragment(SearchFragment(),"Search")
         viewPagerAdapter.addFragment(SettingsFragment(),"Settings")
 
         binding.viewPager.adapter=viewPagerAdapter
-        binding.tabLayoutid.setupWithViewPager(binding.viewPager)
+        binding.tabLayoutid.setupWithViewPager(binding.viewPager)*/
+
+        val ref=FirebaseDatabase.getInstance().reference.child("Chats")
+        ref!!.addValueEventListener(object: ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+
+                val viewPagerAdapter=ViewPagerAdapter(supportFragmentManager)
+
+                var countUnreadMessage=0
+                for(dataSnapshot in snapshot.children){
+
+                    val chat = dataSnapshot.getValue(Chat::class.java)
+                    if (chat!!.receiver.equals(firebaseUser!!.uid) && !chat.isseen){
+
+                        countUnreadMessage+=1
+                    }
+                }
+
+                if(countUnreadMessage==0){
+
+                    viewPagerAdapter.addFragment(ChatsFragment(),"Chats")
+
+                }else{
+
+                    viewPagerAdapter.addFragment(ChatsFragment(),"($countUnreadMessage) Chats")
+                }
+                viewPagerAdapter.addFragment(SearchFragment(),"Search")
+                viewPagerAdapter.addFragment(SettingsFragment(),"Settings")
+                binding.viewPager.adapter=viewPagerAdapter
+                binding.tabLayoutid.setupWithViewPager(binding.viewPager)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+
+        })
 
 
         //Display username and profile pictures

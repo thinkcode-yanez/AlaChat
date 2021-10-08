@@ -5,22 +5,24 @@ import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageTask
 import com.google.firebase.storage.UploadTask
 import com.squareup.picasso.Picasso
+import com.thinkcode.alachat.adapters.ChatsAdapter
 import com.thinkcode.alachat.databinding.ActivityMessageChatBinding
+import com.thinkcode.alachat.models.Chat
 import com.thinkcode.alachat.models.Users
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class MessageChatActivity : AppCompatActivity() {
 
@@ -28,12 +30,26 @@ class MessageChatActivity : AppCompatActivity() {
 
     var userIdVisit: String = ""
     var firebaseUser: FirebaseUser? = null
+    var chatsAdapter:ChatsAdapter?=null
+    var mChatList: List<Chat>?=null
+    var linearLayout:LinearLayoutManager?=null
+
+    var reference:DatabaseReference?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMessageChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(binding.toolbarMessageChat)
+        supportActionBar!!.title=""
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        binding.toolbarMessageChat.setNavigationOnClickListener {
+            val intent= Intent(this@MessageChatActivity,WelcomeActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish()
+        }
 
         intent = intent
         userIdVisit = intent.getStringExtra("visit_id").toString() //quitar el string
@@ -41,14 +57,24 @@ class MessageChatActivity : AppCompatActivity() {
         firebaseUser = FirebaseAuth.getInstance().currentUser
 
 
-        val reference = FirebaseDatabase.getInstance().reference
+        binding.recyclerviewChats.setHasFixedSize(true)
+        linearLayout=LinearLayoutManager(applicationContext)
+        binding.recyclerviewChats.layoutManager=linearLayout
+
+
+
+
+        //CARGA LA INFOMRACION DE A QUIEN DIMOS CLICK Y CON QUIEN ESTAMOS CHATEANDO
+         reference = FirebaseDatabase.getInstance().reference
             .child("Users").child(userIdVisit)
-        reference.addValueEventListener(object : ValueEventListener {
+        reference!!.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
 
                 val user: Users? = snapshot.getValue(Users::class.java)
                 binding.usernameMessageChat.text = user!!.username
                 Picasso.get().load(user.profile).into(binding.profileImageMessageChat)
+
+                retrieveMessage(firebaseUser!!.uid,userIdVisit,user.profile)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -80,7 +106,11 @@ class MessageChatActivity : AppCompatActivity() {
             intent.type = "image/*"
             startActivityForResult(Intent.createChooser(intent, "Pick Image"), 438)
         }
+
+        seenMessage(userIdVisit)
     }
+
+
 
     private fun sendMessageToUser(senderId: String, receiverId: String?, message: String) {
 
@@ -198,5 +228,78 @@ class MessageChatActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun retrieveMessage(senderId: String, receiverId: String, receiverImageUrl: String) {
+
+        mChatList=ArrayList()
+        val reference = FirebaseDatabase.getInstance().reference.child("Chats")
+
+        reference.addValueEventListener(object: ValueEventListener{
+            override fun onDataChange(p0: DataSnapshot) {
+                (mChatList as ArrayList<Chat>).clear()
+                for(snapshot in p0.children){
+
+                    val chat = snapshot.getValue(Chat::class.java)
+
+                    if(chat!!.receiver.equals(senderId) && chat.sender.equals(receiverId)
+                        || chat.receiver.equals(receiverId) && chat.sender.equals(senderId)){
+
+                        (mChatList as ArrayList<Chat>).add(chat)
+
+                    }
+                    chatsAdapter= ChatsAdapter(this@MessageChatActivity,(mChatList as ArrayList<Chat>),receiverImageUrl)
+
+                    binding.recyclerviewChats.adapter=chatsAdapter
+                   // linearLayout!!.scrollToPosition((mChatList as ArrayList<Chat>).size -1)
+                    binding.recyclerviewChats.scrollToPosition(chatsAdapter!!.itemCount -1)
+                   // binding.recyclerviewChats.scrollto
+
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+
+
+        })
+
+    }
+
+    var seenListener:ValueEventListener?=null
+
+    private fun seenMessage(userId:String,){
+        val reference = FirebaseDatabase.getInstance().reference.child("Chats")
+
+        seenListener=reference!!.addValueEventListener(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+
+                for(dataSnapshot in snapshot.children){
+
+                    val chat=dataSnapshot.getValue(Chat::class.java)
+
+                    if (chat!!.receiver.equals(firebaseUser!!.uid) && chat.sender.equals(userId))
+                    {
+                        val hashmap=HashMap<String,Any>()
+                        hashmap["isseen"]= true
+                        dataSnapshot.ref.updateChildren(hashmap)
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+
+
+        })
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        reference!!.removeEventListener(seenListener!!)
     }
 }

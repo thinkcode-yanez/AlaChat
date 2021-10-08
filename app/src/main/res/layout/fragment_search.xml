@@ -7,20 +7,22 @@
     tools:context=".fragments.SearchFragment">
 
 
-
     <EditText
         android:id="@+id/et_searchUsers"
+        android:paddingStart="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:hint="Search Users here...">
 
     </EditText>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSearhList"
-        android:layout_below="@id/et_searchUsers"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_below="@id/et_searchUsers"
+        android:paddingStart="12dp">
 
     </androidx.recyclerview.widget.RecyclerView>
 
