@@ -1,6 +1,7 @@
 package com.thinkcode.alachat
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
@@ -15,14 +16,21 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.*
+import com.squareup.picasso.Picasso
 import com.thinkcode.alachat.databinding.ActivityMainBinding
 import com.thinkcode.alachat.fragments.ChatsFragment
 import com.thinkcode.alachat.fragments.SearchFragment
 import com.thinkcode.alachat.fragments.SettingsFragment
+import com.thinkcode.alachat.models.Chat
+import com.thinkcode.alachat.models.Users
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var appBarConfiguration: AppBarConfiguration
+    var refUsers:DatabaseReference?=null
+    var firebaseUser:FirebaseUser?=null
+
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,26 +38,87 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setSupportActionBar(binding.toolbarMain)
+
+        firebaseUser=FirebaseAuth.getInstance().currentUser //Obtiene el usuario individual
+        refUsers=FirebaseDatabase.getInstance().reference.child("Users").child(firebaseUser!!.uid)//Obetiene una referencia de algun usuario
+
+
+
+
         val toolbar = binding.toolbarMain
         setSupportActionBar(toolbar)
         supportActionBar!!.title=""
 
-        val viewPagerAdapter=ViewPagerAdapter(supportFragmentManager)
+     /*   val viewPagerAdapter=ViewPagerAdapter(supportFragmentManager)
 
         viewPagerAdapter.addFragment(ChatsFragment(),"Chats")
         viewPagerAdapter.addFragment(SearchFragment(),"Search")
         viewPagerAdapter.addFragment(SettingsFragment(),"Settings")
 
         binding.viewPager.adapter=viewPagerAdapter
-        binding.tabLayoutid.setupWithViewPager(binding.viewPager)
+        binding.tabLayoutid.setupWithViewPager(binding.viewPager)*/
 
+        val ref=FirebaseDatabase.getInstance().reference.child("Chats")
+        ref!!.addValueEventListener(object: ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+
+                val viewPagerAdapter=ViewPagerAdapter(supportFragmentManager)
+
+                var countUnreadMessage=0
+                for(dataSnapshot in snapshot.children){
+
+                    val chat = dataSnapshot.getValue(Chat::class.java)
+                    if (chat!!.receiver.equals(firebaseUser!!.uid) && !chat.isseen){
+
+                        countUnreadMessage+=1
+                    }
+                }
+
+                if(countUnreadMessage==0){
+
+                    viewPagerAdapter.addFragment(ChatsFragment(),"Chats")
+
+                }else{
+
+                    viewPagerAdapter.addFragment(ChatsFragment(),"($countUnreadMessage) Chats")
+                }
+                viewPagerAdapter.addFragment(SearchFragment(),"Search")
+                viewPagerAdapter.addFragment(SettingsFragment(),"Settings")
+                binding.viewPager.adapter=viewPagerAdapter
+                binding.tabLayoutid.setupWithViewPager(binding.viewPager)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+
+        })
+
+
+        //Display username and profile pictures
+        refUsers!!.addValueEventListener(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if(snapshot.exists()){
+
+                    val user: Users? =snapshot.getValue(Users::class.java)
+                    binding.userName.text=user!!.username
+                    Picasso.get().load(user.profile).into(binding.profileImage)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+
+
+        })
 
 
 
 
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
